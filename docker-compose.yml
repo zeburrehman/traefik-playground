@@ -1,0 +1,11 @@
+version: '3.5'
+services: 
+    app1:
+        image: containous/whoami
+        ports:
+            - "8080:80"        
+
+    app2:
+        image: containous/whoami
+        ports:
+            - "8081:80"
