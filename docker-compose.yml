@@ -6,6 +6,8 @@ services:
         command: 
             # Entrypoint by name web is created with port 80. Traefik will listen on this port for all application
             - --entrypoints.web.address=:80
+            # Entrypoint for secure connecion on https
+            - --entrypoints.ws.address=:443
             # Log level of traefik container set to INFO
             - --log.level=INFO
             # A docker provider is set for treafik.
@@ -17,6 +19,8 @@ services:
         ports:
             # Traefik port 80 mapped on host OS port 9090
             - "9090:80"
+            # Traefik port for https
+            - "443:443"
             # Traefik api port 8080 mapped on host OS port 8080, This will show dashboard of Traefik
             - "8080:8080"
         volumes: 
@@ -24,8 +28,14 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
         labels:            
             traefik.enable: true
+            # Creating router for catching all the requests in order to redirect them to https if it's http.
+            traefik.http.routers.http_catchall.rule: hostregexp(`{host:.+}`)
+            traefik.http.routers.http_catchall.entrypoints: web
+            traefik.http.routers.http_catchall.middlewares: redirect_https
+
             # Middleware defination, name of middleware is auth_app1. admin/password, user/test
             traefik.http.middlewares.auth.basicauth.users: admin:$$apr1$$552qJyQE$$zyezHkrq5CaLqW64jLPI10, user:$$apr1$$v4ed1sur$$zj98wCfNsMpBGyRJPCS/l0
+            traefik.http.middlewares.redirect_https.redirectscheme.scheme: https
 
     app1:
         # whoami will list the IP address of this container
@@ -34,7 +44,9 @@ services:
             # Treafik will be entertain this container by setting it to true
             traefik.enable: true
             # web entrypoint is set for this container, It will listen on port 9090 as this port is mapped to traefik port 80.
-            traefik.http.routers.app1.entrypoints: web
+            traefik.http.routers.app1.entrypoints: ws
+            # Enable tls for this container as we have set entry point as websecure(ws)
+            traefik.http.routers.app1.tls: true
             # Traefik will redirect all traffic to this container when request with following url is received.
             traefik.http.routers.app1.rule: Host(`app1.net`)
             # Set middleware defined in middlewares section
@@ -44,6 +56,7 @@ services:
         image: containous/whoami
         labels: 
             traefik.enable: true
-            traefik.http.routers.app2.entrypoints: web
+            traefik.http.routers.app2.entrypoints: ws
+            traefik.http.routers.app2.tls: true
             traefik.http.routers.app2.rule: Host(`app2.net`)
             traefik.http.routers.app2.middlewares: auth
