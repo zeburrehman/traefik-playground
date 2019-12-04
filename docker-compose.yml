@@ -22,6 +22,10 @@ services:
         volumes: 
             # Volume mapping of docker.sock, Traefik will automatically listen all the container on this socket
             - /var/run/docker.sock:/var/run/docker.sock
+        labels:            
+            traefik.enable: true
+            # Middleware defination, name of middleware is auth_app1. admin/password, user/test
+            traefik.http.middlewares.auth.basicauth.users: admin:$$apr1$$552qJyQE$$zyezHkrq5CaLqW64jLPI10, user:$$apr1$$v4ed1sur$$zj98wCfNsMpBGyRJPCS/l0
 
     app1:
         # whoami will list the IP address of this container
@@ -34,10 +38,7 @@ services:
             # Traefik will redirect all traffic to this container when request with following url is received.
             traefik.http.routers.app1.rule: Host(`app1.net`)
             # Set middleware defined in middlewares section
-            traefik.http.routers.app1.middlewares: auth_app1
-
-            # Middleware defination, name of middleware is auth_app1. admin/password, user/test
-            traefik.http.middlewares.auth_app1.basicauth.users: admin:$$apr1$$552qJyQE$$zyezHkrq5CaLqW64jLPI10, user:$$apr1$$v4ed1sur$$zj98wCfNsMpBGyRJPCS/l0
+            traefik.http.routers.app1.middlewares: auth
 
     app2:
         image: containous/whoami
@@ -45,7 +46,4 @@ services:
             traefik.enable: true
             traefik.http.routers.app2.entrypoints: web
             traefik.http.routers.app2.rule: Host(`app2.net`)
-            traefik.http.routers.app2.middlewares: auth_app2
-
-            # Middleware defination, name of middleware is auth_app2. user1/user1, user2/user2
-            traefik.http.middlewares.auth_app2.basicauth.users: user1:$$apr1$$ChRGqlyB$$w4jzjd3ZGPJks/.M/7ma31, user2:$$apr1$$9A9jKefD$$8j43vzVTe6hDws6h8e5M80
+            traefik.http.routers.app2.middlewares: auth
