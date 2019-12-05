@@ -1,0 +1,11 @@
+# Middleware defination, for auth_app1 credentials are admin/password, user/test
+http:
+    middlewares:
+        auth:
+            basicAuth:
+                users:
+                    - admin:$apr1$552qJyQE$zyezHkrq5CaLqW64jLPI10
+                    - user:$apr1$v4ed1sur$zj98wCfNsMpBGyRJPCS/l0
+        redirect_https:
+            redirectScheme:
+                scheme: https

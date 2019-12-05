@@ -16,6 +16,8 @@ services:
             - --providers.docker.exposedbydefault=false
             # Run traefik API on insecure protocol
             - --api
+            - --providers.file.directory=/config/
+            - --providers.file.watch
         ports:
             # Traefik port 80 mapped on host OS port 9090
             - "9090:80"
@@ -24,27 +26,23 @@ services:
         volumes: 
             # Volume mapping of docker.sock, Traefik will automatically listen all the container on this socket
             - /var/run/docker.sock:/var/run/docker.sock
+            - ./config/:/config/
         labels:            
             traefik.enable: true
             # Creating router for catching all the requests in order to redirect them to https if it's http.
             traefik.http.routers.http_catchall.rule: hostregexp(`{host:.+}`)
             traefik.http.routers.http_catchall.entrypoints: web
-            traefik.http.routers.http_catchall.middlewares: redirect_https
+            traefik.http.routers.http_catchall.middlewares: redirect_https@file
 
             # Dashboard settings
             # A valid endpoint for dashbaord
-            traefik.http.routers.traefik.rule: host(`app.dashboard.net`)
+            traefik.http.routers.traefik.rule: host(`app3.net`)
             # Expose secure endpoint (https)
             traefik.http.routers.traefik.entrypoints: ws
             # Set the tls flag to true to let traefik know that this endpoint is exposed as https and redirect all http traffic to https one.
             traefik.http.routers.traefik.tls: true
             # In order to redirect all api traffic set it to this new router.
             traefik.http.routers.traefik.service: api@internal
-
-            # Middleware defination, name of middleware is auth_app1. admin/password, user/test
-            traefik.http.middlewares.auth.basicauth.users: admin:$$apr1$$552qJyQE$$zyezHkrq5CaLqW64jLPI10, user:$$apr1$$v4ed1sur$$zj98wCfNsMpBGyRJPCS/l0
-            traefik.http.middlewares.redirect_https.redirectscheme.scheme: https
-
     app1:
         # whoami will list the IP address of this container
         image: containous/whoami
@@ -58,7 +56,7 @@ services:
             # Traefik will redirect all traffic to this container when request with following url is received.
             traefik.http.routers.app1.rule: Host(`app1.net`)
             # Set middleware defined in middlewares section
-            traefik.http.routers.app1.middlewares: auth
+            traefik.http.routers.app1.middlewares: auth@file
 
     app2:
         image: containous/whoami
@@ -67,4 +65,4 @@ services:
             traefik.http.routers.app2.entrypoints: ws
             traefik.http.routers.app2.tls: true
             traefik.http.routers.app2.rule: Host(`app2.net`)
-            traefik.http.routers.app2.middlewares: auth
+            traefik.http.routers.app2.middlewares: auth@file
