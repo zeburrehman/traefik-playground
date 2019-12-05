@@ -36,13 +36,14 @@ services:
 
             # Dashboard settings
             # A valid endpoint for dashbaord
-            traefik.http.routers.traefik.rule: host(`app3.net`)
+            traefik.http.routers.traefik.rule: host(`app.dashboard.net`)
             # Expose secure endpoint (https)
             traefik.http.routers.traefik.entrypoints: ws
             # Set the tls flag to true to let traefik know that this endpoint is exposed as https and redirect all http traffic to https one.
             traefik.http.routers.traefik.tls: true
             # In order to redirect all api traffic set it to this new router.
             traefik.http.routers.traefik.service: api@internal
+
     app1:
         # whoami will list the IP address of this container
         image: containous/whoami
@@ -66,3 +67,12 @@ services:
             traefik.http.routers.app2.tls: true
             traefik.http.routers.app2.rule: Host(`app2.net`)
             traefik.http.routers.app2.middlewares: auth@file
+            traefik.http.routers.app2.service: canary@file
+
+            traefik.http.services.app2_svc.loadbalancer.server.port: 80
+    
+    app3:
+        image: containous/whoami
+        labels: 
+            traefik.enable: true
+            traefik.http.services.app3_svc.loadbalancer.server.port: 80

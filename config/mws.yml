@@ -9,3 +9,11 @@ http:
         redirect_https:
             redirectScheme:
                 scheme: https
+    services:
+        canary:
+            weighted:
+                services:
+                - name: app2_svc@docker
+                  weight: 3
+                - name: app3_svc@docker
+                  weight: 1
