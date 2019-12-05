@@ -15,14 +15,12 @@ services:
             # Traefik won't register all the container on given docker instance
             - --providers.docker.exposedbydefault=false
             # Run traefik API on insecure protocol
-            - --api.insecure
+            - --api
         ports:
             # Traefik port 80 mapped on host OS port 9090
             - "9090:80"
             # Traefik port for https
             - "443:443"
-            # Traefik api port 8080 mapped on host OS port 8080, This will show dashboard of Traefik
-            - "8080:8080"
         volumes: 
             # Volume mapping of docker.sock, Traefik will automatically listen all the container on this socket
             - /var/run/docker.sock:/var/run/docker.sock
@@ -32,6 +30,16 @@ services:
             traefik.http.routers.http_catchall.rule: hostregexp(`{host:.+}`)
             traefik.http.routers.http_catchall.entrypoints: web
             traefik.http.routers.http_catchall.middlewares: redirect_https
+
+            # Dashboard settings
+            # A valid endpoint for dashbaord
+            traefik.http.routers.traefik.rule: host(`app.dashboard.net`)
+            # Expose secure endpoint (https)
+            traefik.http.routers.traefik.entrypoints: ws
+            # Set the tls flag to true to let traefik know that this endpoint is exposed as https and redirect all http traffic to https one.
+            traefik.http.routers.traefik.tls: true
+            # In order to redirect all api traffic set it to this new router.
+            traefik.http.routers.traefik.service: api@internal
 
             # Middleware defination, name of middleware is auth_app1. admin/password, user/test
             traefik.http.middlewares.auth.basicauth.users: admin:$$apr1$$552qJyQE$$zyezHkrq5CaLqW64jLPI10, user:$$apr1$$v4ed1sur$$zj98wCfNsMpBGyRJPCS/l0
